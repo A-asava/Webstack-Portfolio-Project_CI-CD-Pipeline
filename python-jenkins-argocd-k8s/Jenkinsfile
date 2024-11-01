@@ -12,7 +12,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'github_access_credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                     script {
                         git credentialsId: 'github_access_credentials', 
-                        url: 'https://github.com/A-asava/Webstack-Portfolio-Project_CI-CD-Pipeline/tree/main/python-jenkins-argocd-k8s',
+                        url: 'https://github.com/A-asava/Webstack-Portfolio-Project_CI-CD-Pipeline',
                         branch: 'main'
                     }
                 }
