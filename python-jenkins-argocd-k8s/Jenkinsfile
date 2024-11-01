@@ -24,7 +24,7 @@ pipeline {
                 script {
                     sh '''
                     echo 'Build Docker Image'
-                    docker build -t mudeizi/cicd-e2e:${IMAGE_TAG} -f python-jenkins-argocd-k8s/Dockerfile .
+                    docker build -t mudeizi/cicd-e2e:${IMAGE_TAG} .
                     '''
                 }
             }
