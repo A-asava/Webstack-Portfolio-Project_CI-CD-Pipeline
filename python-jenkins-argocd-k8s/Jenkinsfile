@@ -1,5 +1,4 @@
 pipeline {
-    
     agent any 
     
     environment {
@@ -8,60 +7,72 @@ pipeline {
     
     stages {
         
-        stage('Checkout'){
-           steps {
-                git credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670', 
-                url: 'https://github.com/iam-veeramalla/cicd-end-to-end',
-                branch: 'main'
-           }
+        stage('Checkout') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github_access_credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    script {
+                        git credentialsId: 'github_access_credentials', 
+                        url: 'https://github.com/A-asava/Webstack-Portfolio-Project_CI-CD-Pipeline/tree/main/python-jenkins-argocd-k8s',
+                        branch: 'main'
+                    }
+                }
+            }
         }
 
-        stage('Build Docker'){
-            steps{
-                script{
+        stage('Build Docker') {
+            steps {
+                script {
                     sh '''
-                    echo 'Buid Docker Image'
-                    docker build -t abhishekf5/cicd-e2e:${BUILD_NUMBER} .
+                    echo 'Build Docker Image'
+                    docker build -t mudeizi/cicd-e2e:${IMAGE_TAG} .
                     '''
                 }
             }
         }
 
-        stage('Push the artifacts'){
-           steps{
-                script{
-                    sh '''
-                    echo 'Push to Repo'
-                    docker push abhishekf5/cicd-e2e:${BUILD_NUMBER}
-                    '''
-                }
-            }
-        }
-        
-        stage('Checkout K8S manifest SCM'){
+        stage('Push the artifacts') {
             steps {
-                git credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670', 
-                url: 'https://github.com/iam-veeramalla/cicd-demo-manifests-repo.git',
-                branch: 'main'
-            }
-        }
-        
-        stage('Update K8S manifest & push to Repo'){
-            steps {
-                script{
-                    withCredentials([usernamePassword(credentialsId: 'f87a34a8-0e09-45e7-b9cf-6dc68feac670', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                // Using Docker Hub credentials here
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_access_credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    script {
                         sh '''
-                        cat deploy.yaml
-                        sed -i '' "s/32/${BUILD_NUMBER}/g" deploy.yaml
-                        cat deploy.yaml
+                        echo 'Login to Docker Hub'
+                        echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+                        echo 'Push to Docker Hub'
+                        docker push mudeizi/cicd-e2e:${IMAGE_TAG}
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Checkout K8S manifest SCM') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'github_access_credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                    script {
+                        git credentialsId: 'github_access_credentials',
+                        url: 'https://github.com/A-asava/portfolio_project_manifest_repo.git',
+                        branch: 'main'
+                    }
+                }
+            }
+        }
+
+        stage('Update K8S manifest & push to Repo') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github_access_credentials', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh '''
+                        echo 'Updating K8S manifest'
+                        sed -i "s/32/${IMAGE_TAG}/g" deploy.yaml
                         git add deploy.yaml
                         git commit -m 'Updated the deploy yaml | Jenkins Pipeline'
-                        git remote -v
-                        git push https://github.com/iam-veeramalla/cicd-demo-manifests-repo.git HEAD:main
-                        '''                        
+                        echo ${GIT_PASSWORD} | git push https://github.com/A-asava/portfolio_project_manifest_repo HEAD:main
+                        '''
                     }
                 }
             }
         }
     }
 }
+
