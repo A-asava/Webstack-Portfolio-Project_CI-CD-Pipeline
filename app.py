@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 
 app = Flask(__name__)
 
@@ -7,7 +7,7 @@ tasks = []
 
 @app.route('/')
 def home():
-    return "Hello, welcome to said's CI/CD demo app!"
+    return render_template('index.html')
 
 @app.route('/tasks', methods=['GET'])
 def get_tasks():

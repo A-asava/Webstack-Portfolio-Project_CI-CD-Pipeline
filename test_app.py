@@ -11,7 +11,7 @@ def test_home(client):
     """Test the home route"""
     response = client.get('/')
     assert response.status_code == 200
-    assert b"Hello, welcome to said's CI/CD demo app!" in response.data
+    assert b"Welcome to Saidi's CI/CD Demo App" in response.data
 
 def test_get_tasks_empty(client):
     """Test retrieving tasks when none are present"""
