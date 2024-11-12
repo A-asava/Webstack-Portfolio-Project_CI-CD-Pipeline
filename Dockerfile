@@ -4,9 +4,12 @@ FROM python:3.9-slim
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies in alphabetical order for readability
 RUN apt-get update && \
-    apt-get install -y python3-distutils gcc libpq-dev && \
+    apt-get install -y \
+        gcc \
+        libpq-dev \
+        python3-distutils && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Flask and other Python dependencies
