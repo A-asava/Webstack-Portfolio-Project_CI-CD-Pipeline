@@ -48,7 +48,7 @@ pipeline {
                         # Install requirements
                         pip install -r requirements.txt
                         pip install coverage pytest pytest-cov pytest-flask
-                        pip install werkzeug ==2.0.3
+                        pip install werkzeug==2.0.3
 
                         # Run tests with coverage
                         ./venv/bin/pytest --cov=app test.py --cov-report xml
