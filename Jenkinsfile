@@ -48,9 +48,10 @@ pipeline {
                         # Install requirements
                         pip install -r requirements.txt
                         pip install coverage pytest pytest-cov pytest-flask
+                        pip install werkzeug ==2.0.3
 
                         # Run tests with coverage
-                        ./venv/bin/pytest --cov=app test_app.py --cov-report xml
+                        ./venv/bin/pytest --cov=app test.py --cov-report xml
 
                         # Move coverage report to workspace root for SonarCloud
                         mv coverage.xml ../coverage.xml
