@@ -51,10 +51,10 @@ pipeline {
                         pip install werkzeug==2.0.3
 
                         # Run tests with coverage
-                        ./venv/bin/pytest --cov=app test.py --cov-report xml
+                        pytest --cov=app --cov-report=xml
 
                         # Move coverage report to workspace root for SonarCloud
-                        mv coverage.xml ../coverage.xml
+                        mv coverage.xml coverage.xml
                     '''
                 }
             }
