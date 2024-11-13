@@ -68,6 +68,7 @@ pipeline {
                         echo "import pytest\n\ndef test_always_passes():\n    assert True" > test_sample.py
                         
                         # Run tests with coverage using absolute paths
+                        echo "Running all tests..."
                         "${VENV_PATH}/bin/python" -m pytest --cov=app --cov-report=xml
                         
                         # Check if coverage.xml exists and move it
