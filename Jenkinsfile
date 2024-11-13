@@ -38,62 +38,108 @@ pipeline {
         stage('Test with Coverage') {
             steps {
                 script {
-                    sh '''
-                        # Ensure we're in the correct directory
-                        pwd
-                        ls -la
+                    sh """
+                        # Create and activate virtual environment
+                        sudo apt-get update
+                        sudo apt-get install -y python3.8-venv
+                        python3 -m venv venv
+                        . venv/bin/activate
                         
-                        # Clean up any existing virtual environment
-                        rm -rf kratos_project_env
+                        # Install requirements
+                        pip install -r requirements.txt
+                        pip install coverage pytest pytest-cov
                         
-                        # Create virtual environment
-                        python3 -m venv kratos_project_env
+                        # Run tests with coverage
+                        coverage run -m pytest
                         
-                        # Verify virtual environment creation
-                        ls -la kratos_project_env/bin
-                        
-                        # Use absolute paths instead of relative paths
-                        VENV_PATH="$(pwd)/kratos_project_env"
-                        
-                        # Install packages using absolute paths
-                        "${VENV_PATH}/bin/python" -m pip install --upgrade pip
-                        "${VENV_PATH}/bin/pip" install -r requirements.txt
-                        "${VENV_PATH}/bin/pip" install coverage pytest pytest-cov pytest-flask
-                        
-                        # Create a simple test file
-                        echo "import pytest\n\ndef test_always_passes():\n    assert True" > test_sample.py
-                        
-                        # Run tests with coverage using absolute paths
-                        echo "Running all tests..."
-                        "${VENV_PATH}/bin/python" -m pytest --cov=app --cov-report=xml
-                        
-                        # Check if coverage.xml exists and move it
-                        if [ -f coverage.xml ]; then
-                            cp coverage.xml ../coverage.xml
-                        else
-                            echo "coverage.xml not found!"
-                            exit 1
-                        fi
-                    '''
-                }
-            }
-            post {
-                always {
-                    // Clean up
-                    sh 'rm -rf kratos_project_env'
+                        # Generate coverage report in XML format
+                        coverage xml
+                    """
                 }
             }
         }
 
-        // Remaining pipeline stages as previously defined...
+        stage('SonarCloud Analysis') {
+            environment {
+                SONAR_TOKEN = credentials('sonarcloud-token')
+            }
+            steps {
+                withSonarQubeEnv('SonarCloud') {
+                    sh """
+                        export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+                        export PATH=\$JAVA_HOME/bin:/opt/sonar-scanner/bin:\$PATH
+                        
+                        # Verify Java version
+                        java -version
+                        
+                        ${SONAR_SCANNER_PATH} \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.organization=${SONAR_ORGANIZATION} \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=https://sonarcloud.io \
+                        -Dsonar.python.version=3 \
+                        -Dsonar.python.coverage.reportPaths=coverage.xml \
+                        -Dsonar.sourceEncoding=UTF-8 \
+                        -Dsonar.login=\${SONAR_TOKEN} \
+                        -Dsonar.exclusions=**/migrations/**,**/tests/**,**/__pycache__/**,venv/**
+                    """
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh """
+                        if ! nc -z ${DOCKER_HOST_IP} 2375; then
+                            echo "Cannot connect to Docker host"
+                            exit 1
+                        fi
+                        docker -H ${DOCKER_HOST} build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
+                        docker -H ${DOCKER_HOST} tag ${DOCKER_IMAGE}:${IMAGE_TAG} ${DOCKER_IMAGE}:${IMAGE_TAG}
+                        
+                        # Verify that the image exists
+                        if ! docker -H ${DOCKER_HOST} images | grep -q "${DOCKER_IMAGE}.*${IMAGE_TAG}"; then
+                            echo "Docker image ${DOCKER_IMAGE}:${IMAGE_TAG} was not built successfully."
+                            exit 1
+                        fi
+                        
+                        # Adding delay to ensure image is available
+                        sleep 10
+                    """
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_access_credentials', 
+                               usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    script {
+                        sh """
+                            echo \${DOCKER_PASSWORD} | docker -H ${DOCKER_HOST} login -u \${DOCKER_USERNAME} --password-stdin
+                            docker -H ${DOCKER_HOST} push ${DOCKER_IMAGE}:${IMAGE_TAG}
+                        """
+                    }
+                }
+            }
+        }
     }
 
     post {
         always {
             cleanWs()
-            sh '''
+            sh """
                 docker -H ${DOCKER_HOST} rmi ${DOCKER_IMAGE}:${IMAGE_TAG} || true
-            '''
+            """
         }
         success {
             slackSend(
