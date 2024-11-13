@@ -24,7 +24,7 @@ def test_profile(client):
 def test_about(client):
     response = client.get('/about')
     assert response.status_code == 200
-    assert b"This is the about page." in response.data
+    assert b"This page provides information about the application." in response.data
 
 def test_contact(client):
     response = client.get('/contact')
