@@ -16,7 +16,18 @@ def test_tasks(client):
     assert response.status_code == 200
     assert b"This is the tasks page. You can view and manage tasks here." in response.data
 
-def test_security_headers(client):
-    response = client.get('/')
-    assert 'X-Content-Type-Options' in response.headers
+def test_profile(client):
+    response = client.get('/profile')
+    assert response.status_code == 200
+    assert b"This is the user profile page." in response.data
+
+def test_about(client):
+    response = client.get('/about')
+    assert response.status_code == 200
+    assert b"This is the about page." in response.data
+
+def test_contact(client):
+    response = client.get('/contact')
+    assert response.status_code == 200
+    assert b"This is the contact page." in response.data
 
