@@ -63,7 +63,6 @@ pipeline {
                         "${VENV_PATH}/bin/python" -m pip install --upgrade pip
                         "${VENV_PATH}/bin/pip" install -r requirements.txt
                         "${VENV_PATH}/bin/pip" install coverage pytest pytest-cov pytest-flask
-                        "${VENV_PATH}/bin/pip" install werkzeug==2.0.3
                         
                         # Run tests with coverage using absolute paths
                         "${VENV_PATH}/bin/python" -m pytest --cov=app --cov-report=xml
