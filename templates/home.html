@@ -94,7 +94,7 @@
                 <p class="card-text">{{ job.location }}</p>
                 <p class="card-text">Salary: {{ job.salary }}</p>
                 <button class="btn btn-primary view-job" data-id="{{ job.id }}" data-bs-toggle="modal" data-bs-target="#jobModal">View Details</button>
-                <a href="{{ url_for('apply', job_id=job.id) }}" class="btn btn-success">Apply</a>
+                <button class="btn btn-success" disabled>Apply</button>
               </div>
             </div>
           </div>

@@ -1,24 +1,15 @@
-<nav class="navbar shadow-sm fixed-top bg-white">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">
-      <img src="/static/logo.jpg" alt="" width="50" height="24" class="d-inline-block align-text-top">
-      Kratos Careers
-    </a>
-    <ul class="navbar-nav ms-auto">
-      {% if current_user.is_authenticated %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="/">Kratos Careers</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          <a class="nav-link" href="/">Home</a>
         </li>
-      {% else %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-        </li>
-      {% endif %}
-    </ul>
+      </ul>
+    </div>
   </div>
 </nav>
-<div style="height: 56px;"></div>
-
