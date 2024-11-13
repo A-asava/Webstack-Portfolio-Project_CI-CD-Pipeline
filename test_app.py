@@ -1,37 +1,11 @@
 import pytest
-from flask import Flask
+from app import app  # Ensure the app module is correctly imported
 
 @pytest.fixture
-def app():
-    app = Flask(__name__)
-
-    @app.route('/')
-    def home():
-        return """
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>CI/CD Demo App</title>
-        </head>
-        <body>
-            <h1>Hello, welcome to Saidi's CI/CD demo app!</h1>
-            <p>This is a simple demo app with a basic CI/CD pipeline.</p>
-            <a href="/tasks">View Tasks</a>
-        </body>
-        </html>
-        """
-
-    @app.route('/tasks')
-    def tasks():
-        return "<h1>Tasks</h1><p>This is the tasks page.</p>"
-
-    return app
-
-@pytest.fixture
-def client(app):
-    return app.test_client()
+def client():
+    app.config['TESTING'] = True
+    with app.test_client() as client:
+        yield client
 
 def test_home(client):
     response = client.get('/')
@@ -44,6 +18,7 @@ def test_tasks(client):
     assert b"Tasks" in response.data
 
 def test_security_headers(client):
+    """Test that security headers are present in the response."""
     response = client.get('/')
     assert 'X-Content-Type-Options' in response.headers
     assert response.headers['X-Content-Type-Options'] == 'nosniff'
