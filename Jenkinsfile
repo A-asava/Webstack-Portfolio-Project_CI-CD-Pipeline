@@ -42,8 +42,8 @@ pipeline {
                         # Create and activate virtual environment
                         sudo apt-get update
                         sudo apt-get install -y python3.8-venv
-                        python3 -m venv venv
-                        . venv/bin/activate
+                        python3 -m venv kratos_project_env  # Update to use the existing virtual environment name
+                        . kratos_project_env/bin/activate
 
                         # Install requirements
                         pip install -r requirements.txt
@@ -78,7 +78,7 @@ pipeline {
                         -Dsonar.python.coverage.reportPaths=coverage.xml \
                         -Dsonar.sourceEncoding=UTF-8 \
                         -Dsonar.login=${SONAR_TOKEN} \
-                        -Dsonar.exclusions=**/migrations/**,**/tests/**,**/__pycache__/**,venv/**
+                        -Dsonar.exclusions=**/migrations/**,**/tests/**,**/__pycache__/**,kratos_project_env/**
                     '''
                 }
             }
@@ -86,8 +86,11 @@ pipeline {
 
        stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {                    waitForQualityGate abortPipeline: true
-                }            }        }
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
