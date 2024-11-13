@@ -42,15 +42,19 @@ pipeline {
                         # Create and activate virtual environment
                         sudo apt-get update
                         sudo apt-get install -y python3.8-venv
-                        python3 -m venv kratos_project_env  # Update to use the existing virtual environment name
+                        python3 -m venv kratos_project_env
                         . kratos_project_env/bin/activate
 
                         # Install requirements
-                        pip install -r requirements.txt
-                        pip install coverage pytest pytest-cov pytest-flask
+                        kratos_project_env/bin/pip install -r requirements.txt
+                        kratos_project_env/bin/pip install coverage pytest pytest-cov pytest-flask
+                        kratos_project_env/bin/pip install werkzeug==2.0.3
 
                         # Run tests with coverage
-                        pytest --cov=app --cov-report=xml
+                        kratos_project_env/bin/pytest --cov=app --cov-report=xml
+
+                        # Move coverage report to workspace root for SonarCloud
+                        mv coverage.xml ../coverage.xml
                     '''
                 }
             }
@@ -78,13 +82,13 @@ pipeline {
                         -Dsonar.python.coverage.reportPaths=coverage.xml \
                         -Dsonar.sourceEncoding=UTF-8 \
                         -Dsonar.login=${SONAR_TOKEN} \
-                        -Dsonar.exclusions=**/migrations/**,**/tests/**,**/__pycache__/**,kratos_project_env/**
+                        -Dsonar.exclusions=**/migrations/**,**/tests/**,**/__pycache__/**,venv/**
                     '''
                 }
             }
         }
 
-       stage('Quality Gate') {
+        stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
