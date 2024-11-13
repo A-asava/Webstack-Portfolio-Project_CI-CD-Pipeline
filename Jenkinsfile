@@ -43,7 +43,7 @@ pipeline {
                         sudo apt-get update
                         sudo apt-get install -y python3.8-venv
                         python3 -m venv kratos_project_env
-                        source kratos_project_env/bin/activate
+                        . kratos_project_env/bin/activate
 
                         # Verify virtual environment activation
                         if [ -z "$VIRTUAL_ENV" ]; then
