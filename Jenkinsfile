@@ -52,7 +52,9 @@ pipeline {
 
                         # Run tests with coverage
                         pytest --cov=app --cov-report=xml
- 
+
+			# Move coverage report to workspace root for SonarCloud
+                        mv coverage.xml ../coverage.xml
                     '''
                 }
             }
