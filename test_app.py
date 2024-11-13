@@ -19,6 +19,12 @@ def test_tasks(client):
     assert response.status_code == 200
     assert b"This is where the tasks will be displayed." in response.data
 
+def test_about(client):
+    """Test the about page."""
+    response = client.get('/about')
+    assert response.status_code == 200
+    assert b"This page provides information about the application." in response.data
+
 def test_nonexistent_route(client):
     """Test a route that does not exist to ensure proper error handling."""
     response = client.get('/nonexistent')
