@@ -1,43 +1,66 @@
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask_sqlalchemy import SQLAlchemy
 import logging
 import os
 from dotenv import load_dotenv
 from itsdangerous import URLSafeTimedSerializer
 
-# Load environment variables from .env file
-load_dotenv()
+# Initialize SQLAlchemy before creating the Flask app
+db = SQLAlchemy()
 
-app = Flask(__name__)
+def create_app():
+    # Load environment variables from .env file
+    load_dotenv()
+    
+    app = Flask(__name__)
+    
+    # Use environment variables for configuration
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Initialize extensions
+    db.init_app(app)
+    bcrypt = Bcrypt(app)
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'login'
+    login_manager.login_message_category = 'info'
+    
+    # Initialize the URLSafeTimedSerializer
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    
+    # Create all database tables
+    with app.app_context():
+        db.create_all()
+    
+    return app
 
-# Use environment variables for configuration
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret_key')
+# Create the Flask application instance
+app = create_app()
 
-bcrypt = Bcrypt(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
+# User model
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
 
-# Initialize the URLSafeTimedSerializer
-serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-
-# Placeholder data structures
-users = [
-    {"username": "testuser", "email": "testuser@example.com", "password": bcrypt.generate_password_hash("password").decode('utf-8')}
-]
-jobs = [
-    {"id": 1, "title": "Software Engineer", "description": "Develop software applications."},
-    {"id": 2, "title": "Data Analyst", "description": "Analyze data and generate insights."}
-]
+# Job model
+class Job(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return next((user for user in users if user.get('id') == int(user_id)), None)
+    return User.query.get(int(user_id))
 
 @app.route('/')
 def home():
+    jobs = Job.query.all()
     return render_template('home.html', jobs=jobs, company_name='Kratos')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -47,13 +70,16 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-
+        
         if password != confirm_password:
             flash('Passwords do not match', 'danger')
             return redirect(url_for('register'))
-
+        
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-        users.append({"username": username, "email": email, "password": hashed_password})
+        user = User(username=username, email=email, password=hashed_password)
+        db.session.add(user)
+        db.session.commit()
+        
         flash('Your account has been created! You are now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
@@ -63,8 +89,10 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
-        user = next((user for user in users if user["email"] == email), None)
-        if user and bcrypt.check_password_hash(user["password"], password):
+        user = User.query.filter_by(email=email).first()
+        
+        if user and bcrypt.check_password_hash(user.password, password):
+            login_user(user)
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
@@ -80,4 +108,3 @@ def logout():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     app.run(host='0.0.0.0', debug=True)
-
