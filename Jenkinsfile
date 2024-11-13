@@ -43,17 +43,16 @@ pipeline {
                         sudo apt-get update
                         sudo apt-get install -y python3.8-venv
                         python3 -m venv venv
-                        . venv/bin/activate
-                        
+                        . venv/bin/activate || { echo "Failed to activate virtual environment"; exit 1; }
+
                         # Install requirements
-                        pip install -r requirements.txt
-                        pip install coverage pytest pytest-cov
-                        
+                        ./venv/bin/pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
+
                         # Run tests with coverage
-                        coverage run -m pytest
-                        
+                        ./venv/bin/coverage run -m pytest
+
                         # Generate coverage report in XML format
-                        coverage xml
+                        ./venv/bin/coverage xml
                     """
                 }
             }
