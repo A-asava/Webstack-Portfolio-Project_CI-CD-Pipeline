@@ -48,7 +48,7 @@ pipeline {
                         
                         # Install necessary packages for MySQL client build
                         sudo apt-get update
-                        sudo apt-get install -y python3-venv libmysqlclient-dev pkg-config
+                        sudo apt-get install -y python3-venv libmysqlclient-dev pkg-config build-essential
                         
                         # Create virtual environment
                         python3 -m venv kratos_project_env
