@@ -45,6 +45,9 @@ pipeline {
                         python3 -m venv kratos_project_env
                         . kratos_project_env/bin/activate
 
+                        # Upgrade pip
+                        kratos_project_env/bin/pip install --upgrade pip
+
                         # Install requirements
                         kratos_project_env/bin/pip install -r requirements.txt
                         kratos_project_env/bin/pip install coverage pytest pytest-cov pytest-flask
