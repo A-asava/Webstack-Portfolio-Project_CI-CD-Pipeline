@@ -7,10 +7,14 @@ import os
 from dotenv import load_dotenv
 from itsdangerous import URLSafeTimedSerializer
 
-# Initialize SQLAlchemy before creating the Flask app
+# Initialize SQLAlchemy and LoginManager before creating the Flask app
 db = SQLAlchemy()
+login_manager = LoginManager()
+bcrypt = None  # Will be initialized in create_app
 
 def create_app():
+    global bcrypt  # Make bcrypt accessible outside create_app
+    
     # Load environment variables from .env file
     load_dotenv()
     
@@ -24,7 +28,6 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     bcrypt = Bcrypt(app)
-    login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'login'
     login_manager.login_message_category = 'info'
@@ -47,6 +50,22 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
+    
+    # Add this method to make User class compatible with Flask-Login
+    def get_id(self):
+        return str(self.id)
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
 
 # Job model
 class Job(db.Model):
@@ -58,6 +77,7 @@ class Job(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Rest of your routes remain the same
 @app.route('/')
 def home():
     jobs = Job.query.all()
