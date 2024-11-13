@@ -39,15 +39,24 @@ pipeline {
             steps {
                 script {
                     sh """
-                        # Create and activate virtual environment
+                        # Update and install necessary tools
                         sudo apt-get update
-                        sudo apt-get install -y python3.8-venv
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        
-                        # Install requirements
+                        sudo apt-get install -y python3.8 python3.8-venv
+
+                        # Create virtual environment
+                        python3.8 -m venv venv
+
+                        # Upgrade pip to the latest version
                         ./venv/bin/python -m pip install --upgrade pip
+
+                        # Install requirements
                         ./venv/bin/pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
+
+                        # Ensure coverage is installed
+                        ./venv/bin/pip install coverage || { echo "Failed to install coverage"; exit 1; }
+
+                        # List installed packages to verify coverage installation
+                        ./venv/bin/pip list
 
                         # Run tests with coverage
                         ./venv/bin/python -m coverage run -m pytest
