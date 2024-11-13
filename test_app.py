@@ -7,6 +7,7 @@ from flask_bcrypt import generate_password_hash
 def client():
     app.config['TESTING'] = True
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'  # In-memory database for testing
+    app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for testing
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -87,5 +88,4 @@ def test_forgot_password(client):
     }, follow_redirects=True)
     assert response.status_code == 200
     assert b'A password reset link has been sent to your email address.' in response.data
-
 
