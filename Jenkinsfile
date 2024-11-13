@@ -39,23 +39,14 @@ pipeline {
             steps {
                 script {
                     sh """
-                        # Check if Python 3 is available
-                        if ! command -v python3 &> /dev/null; then
-                            echo "Python 3 could not be found. Please install Python 3."
-                            exit 1
-                        fi
-
-                        # Create virtual environment using python3
+                        # Create and activate virtual environment
+                        sudo apt-get update
+                        sudo apt-get install -y python3.8-venv
                         python3 -m venv venv
-
-                        # Verify the virtual environment paths
-                        echo "Using pip from: $(./venv/bin/pip --version)"
-                        echo "Using python from: $(./venv/bin/python --version)"
+                        . venv/bin/activate
                         
-                        # Upgrade pip to the latest version
-                        ./venv/bin/python -m pip install --upgrade pip
-
                         # Install requirements
+                        ./venv/bin/python -m pip install --upgrade pip
                         ./venv/bin/pip install -r requirements.txt || { echo "Failed to install requirements"; exit 1; }
 
                         # Run tests with coverage
