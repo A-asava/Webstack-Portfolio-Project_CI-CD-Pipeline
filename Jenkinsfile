@@ -39,26 +39,48 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Create and activate virtual environment
-                        sudo apt-get update
-                        sudo apt-get install -y python3.8-venv
+                        # Ensure we're in the correct directory
+                        pwd
+                        ls -la
+                        
+                        # Clean up any existing virtual environment
+                        rm -rf kratos_project_env
+                        
+                        # Install python3-venv if not present
+                        which python3-venv || sudo apt-get update && sudo apt-get install -y python3-venv
+                        
+                        # Create virtual environment
                         python3 -m venv kratos_project_env
-                        source kratos_project_env/bin/activate
-
-                        # Upgrade pip
-                        ./kratos_project_env/bin/python -m pip install --upgrade pip
-
-                        # Install requirements
-                        ./kratos_project_env/bin/python -m pip install -r requirements.txt
-                        ./kratos_project_env/bin/python -m pip install coverage pytest pytest-cov pytest-flask
-                        ./kratos_project_env/bin/python -m pip install werkzeug==2.0.3
-
-                        # Run tests with coverage
-                        ./kratos_project_env/bin/python -m pytest --cov=app --cov-report=xml
-
-                        # Move coverage report to workspace root for SonarCloud
-                        mv coverage.xml ../coverage.xml
+                        
+                        # Verify virtual environment creation
+                        ls -la kratos_project_env/bin
+                        
+                        # Use absolute paths instead of relative paths
+                        VENV_PATH="$(pwd)/kratos_project_env"
+                        
+                        # Install packages using absolute paths
+                        "${VENV_PATH}/bin/python" -m pip install --upgrade pip
+                        "${VENV_PATH}/bin/pip" install -r requirements.txt
+                        "${VENV_PATH}/bin/pip" install coverage pytest pytest-cov pytest-flask
+                        "${VENV_PATH}/bin/pip" install werkzeug==2.0.3
+                        
+                        # Run tests with coverage using absolute paths
+                        "${VENV_PATH}/bin/python" -m pytest --cov=app --cov-report=xml
+                        
+                        # Check if coverage.xml exists and move it
+                        if [ -f coverage.xml ]; then
+                            cp coverage.xml ../coverage.xml
+                        else
+                            echo "coverage.xml not found!"
+                            exit 1
+                        fi
                     '''
+                }
+            }
+            post {
+                always {
+                    // Clean up
+                    sh 'rm -rf kratos_project_env'
                 }
             }
         }
