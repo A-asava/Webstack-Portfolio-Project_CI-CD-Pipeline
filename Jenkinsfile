@@ -45,6 +45,12 @@ pipeline {
                         python3 -m venv kratos_project_env
                         . kratos_project_env/bin/activate
 
+                        # Verify virtual environment activation
+                        if [ -z "$VIRTUAL_ENV" ]; then
+                            echo "Virtual environment not activated"
+                            exit 1
+                        fi
+
                         # Upgrade pip
                         kratos_project_env/bin/pip install --upgrade pip
 
