@@ -46,8 +46,9 @@ pipeline {
                         # Clean up any existing virtual environment
                         rm -rf kratos_project_env
                         
-                        # Install python3-venv if not present
-                        which python3-venv || sudo apt-get update && sudo apt-get install -y python3-venv
+                        # Install necessary packages for MySQL client build
+                        sudo apt-get update
+                        sudo apt-get install -y python3-venv libmysqlclient-dev pkg-config
                         
                         # Create virtual environment
                         python3 -m venv kratos_project_env
