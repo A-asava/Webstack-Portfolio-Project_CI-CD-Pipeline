@@ -48,7 +48,6 @@ pipeline {
                         # Install requirements
                         pip install -r requirements.txt
                         pip install coverage pytest pytest-cov pytest-flask
-                        pip install werkzeug==2.0.3
 
                         # Run tests with coverage
                         pytest --cov=app --cov-report=xml
@@ -85,13 +84,10 @@ pipeline {
             }
         }
 
-//        stage('Quality Gate') {
-//            steps {
-//                timeout(time: 5, unit: 'MINUTES') {
-//                    waitForQualityGate abortPipeline: true
-//                }
-//            }
-//        }
+       stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {                    waitForQualityGate abortPipeline: true
+                }            }        }
 
         stage('Build Docker Image') {
             steps {
