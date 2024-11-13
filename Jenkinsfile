@@ -43,7 +43,7 @@ pipeline {
                         sudo apt-get update
                         sudo apt-get install -y python3.8-venv
                         python3 -m venv kratos_project_env
-                        . kratos_project_env/bin/activate
+                        source kratos_project_env/bin/activate
 
                         # Verify virtual environment activation
                         if [ -z "$VIRTUAL_ENV" ]; then
@@ -52,15 +52,15 @@ pipeline {
                         fi
 
                         # Upgrade pip
-                        kratos_project_env/bin/pip install --upgrade pip
+                        ./kratos_project_env/bin/pip install --upgrade pip
 
                         # Install requirements
-                        kratos_project_env/bin/pip install -r requirements.txt
-                        kratos_project_env/bin/pip install coverage pytest pytest-cov pytest-flask
-                        kratos_project_env/bin/pip install werkzeug==2.0.3
+                        ./kratos_project_env/bin/pip install -r requirements.txt
+                        ./kratos_project_env/bin/pip install coverage pytest pytest-cov pytest-flask
+                        ./kratos_project_env/bin/pip install werkzeug==2.0.3
 
                         # Run tests with coverage
-                        kratos_project_env/bin/pytest --cov=app --cov-report=xml
+                        ./kratos_project_env/bin/pytest --cov=app --cov-report=xml
 
                         # Move coverage report to workspace root for SonarCloud
                         mv coverage.xml ../coverage.xml
