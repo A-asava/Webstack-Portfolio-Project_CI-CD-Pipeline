@@ -31,7 +31,7 @@ JOBS = [
 def home():
     return render_template('home.html', 
                          jobs=JOBS, 
-                         company_name='Kratos')
+                         company_name='The Big Demo')
 
 @app.route('/api/jobs/<int:job_id>')
 def get_job(job_id):
